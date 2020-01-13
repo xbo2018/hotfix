@@ -1,7 +1,5 @@
 package org.xbo.hotfix.agent;
 
-import sun.misc.ClassLoaderUtil;
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -34,6 +32,5 @@ public class PatchClassLoader extends URLClassLoader {
     public void close() throws IOException {
         isClosed=true;
         super.close();
-        ClassLoaderUtil.releaseLoader(this);
     }
 }

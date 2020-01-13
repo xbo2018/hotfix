@@ -7,22 +7,26 @@
   <groupId>org.xbo.hotfix.patch.example</groupId>
   <artifactId>patch-example</artifactId>
   <version>1.0-SNAPSHOT</version>
-
   <name>patch-example</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.8</java.version>
+    <hotfix.version>0.3-SNAPSHOT</hotfix.version>
   </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.xbo.hotfix</groupId>
       <artifactId>hotfix-patch</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>${hotfix.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
     <plugins>
       <plugin>

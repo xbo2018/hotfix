@@ -1,6 +1,5 @@
 package org.xbo.hotfix.agent;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -8,6 +7,7 @@ import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.xbo.hotfix.agent.command.Command;
+import org.xbo.hotfix.agent.command.Context;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -18,6 +18,11 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @description:
+ * @author: xbo
+ * @date: 2020/01/11
+ */
 @Slf4j
 public class Installer {
     public static void main(String[] args) throws Exception {
@@ -67,13 +72,7 @@ public class Installer {
         context.setFileTransformerCached(new HashMap<>());
         context.setPatchManager(new PatchManager());
     }
-    @Data
-    public static class Context {
-        private PatchManager patchManager;
-        private Map<String, Set<ResettableClassFileTransformer>> fileTransformerCached;
-        private LineArgs lineArgs;
-        private Instrumentation instrumentation;
-    }
+
     /**
      * @description:
      * @author: xbo
@@ -185,4 +184,5 @@ public class Installer {
             Class<?> handle(ClassLoader loader, String name, Class<?> returned, Throwable thrown) throws ClassNotFoundException;
         }
     }
+
 }

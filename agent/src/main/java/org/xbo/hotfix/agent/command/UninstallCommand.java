@@ -3,11 +3,9 @@ package org.xbo.hotfix.agent.command;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
-import org.xbo.hotfix.agent.Installer;
 import org.xbo.hotfix.agent.LineArgs;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,7 +16,7 @@ import java.util.Set;
 @Slf4j
 public class UninstallCommand implements Command {
     @Override
-    public void execute(Installer.Context context) throws Exception {
+    public void execute(Context context) throws Exception {
         LineArgs lineArgs=context.getLineArgs();
         Set<ResettableClassFileTransformer> transformers=context.getFileTransformerCached().get(lineArgs.getPatch().toString());
         if(transformers!=null&&!transformers.isEmpty()) {

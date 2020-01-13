@@ -54,7 +54,7 @@ public class PatchManager {
         ClassLoader classLoader = load(jarUrl);
         JarURLConnection juc = (JarURLConnection) jarUrl.openConnection();
         Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
-        String classNameSuffix = "Patch";
+        //final String classNameSuffix = "PatchGenerator";
         JarFile jarFile = null;
         try {
             jarFile = juc.getJarFile();
@@ -64,7 +64,7 @@ public class PatchManager {
                 String name = jarEntry.getName();
                 if (name != null && name.endsWith(".class")) {//只解析.class文件
                     String className = name.replace("/", ".").substring(0, name.length() - 6);
-                    if (!className.endsWith(classNameSuffix)) continue;
+                    //if (!className.endsWith(classNameSuffix)) continue;
                     //默认去系统已经定义的路径查找对象，针对外部jar包不能用
                     Class<?> c = Class.forName(className, true, classLoader);//自己定义的loader路径可以找到
                     if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) continue; //排除接口类

@@ -18,7 +18,7 @@ import java.util.Set;
 @Slf4j
 public class CleanCommand implements Command {
     @Override
-    public void execute(Installer.Context context) throws Exception {
+    public void execute(Context context) throws Exception {
         Map<String, Set<ResettableClassFileTransformer>> map=context.getFileTransformerCached();
         for (Map.Entry<String, Set<ResettableClassFileTransformer>> entry : map.entrySet()) {
             String key = entry.getKey();

@@ -1,7 +1,6 @@
 package org.xbo.hotfix.agent.command;
 
 import lombok.extern.slf4j.Slf4j;
-import org.xbo.hotfix.agent.Installer;
 import org.xbo.hotfix.agent.PatchManager;
 
 import java.text.Format;
@@ -17,7 +16,7 @@ import java.util.Collections;
 @Slf4j
 public class ListCommand implements Command {
     @Override
-    public void execute(Installer.Context context) throws Exception {
+    public void execute(Context context) throws Exception {
         Collection<PatchManager.PatchInfo> list=context.getPatchManager().list();
         final String repeated=String.join("", Collections.nCopies(20, "**"));
         StringBuilder stringBuilder=new StringBuilder();
