@@ -5,57 +5,63 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
 1. 编写补丁
 
-   1. 导入hotfix补丁接口maven依赖。（当前hotfix没有放到公共仓库，需要使用maven安装到本地）
+   - 导入hotfix补丁接口maven依赖。（当前hotfix没有放到公共仓库，需要使用maven安装到本地）
 
-      ```
-      <dependency>
-        <groupId>org.xbo.hotfix</groupId>
-        <artifactId>hotfix-patch</artifactId>
-        <version>${hotfix.version}</version>
-      </dependency>
-      ```
+     ```
+     <dependency>
+       <groupId>org.xbo.hotfix</groupId>
+       <artifactId>hotfix-patch</artifactId>
+       <version>${hotfix.version}</version>
+     </dependency>
+     ```
 
-   2. 实现接口PatchGenerator，返回AgentBuilder。样例：
+   - 实现接口PatchGenerator，返回AgentBuilder。样例：
 
-      ```
-      public class HelloControllPatchGenerator implements PatchGenerator {
-          public AgentBuilder createPatchBuilder() {
-              AgentBuilder agentBuilder = new AgentBuilder.Default()
-                      // by default, JVM classes are not instrumented
-                      .ignore(ElementMatchers.none())
-                      .disableClassFormatChanges()
-                      .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-                      .with(AgentBuilder.Listener.StreamWriting.toSystemOut().withErrorsOnly())
-                      .type(ElementMatchers.nameStartsWith("org.xbo.hotfix.demo.web.HelloControll"))
-                      .transform((builder, type, loader, module) -> builder
-                             .visit(Advice
-                                      .to(HelloControllPatchGenerator.class)
-                                      .on(ElementMatchers.named("hello"))
-                              )
-                      );
-              return agentBuilder;
-          }
-      
-          /*
-           * @This 调用对象
-           * @Argument 方法参数(只能选择一个)
-           * @Arguments 方法所有参数
-           * @Origin 原始调用方法
-           * @SuperCall 回调方法
-           * */
-          @Advice.OnMethodEnter//inline默认true,即把方法体内容复制到原方法里面
-          private static void onHelloEnter(@Advice.This Object self, @Advice.Origin Method method,
-                                        @Advice.Argument(value = 0,readOnly = false) String name){
-              System.out.println("begin call hello");
-              name="hello,"+name;
-              System.out.println("new name x:" + name);
-              LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-              loggerContext.getLogger("abc").setLevel(Level.DEBUG);
-          }
-      }
-      ```
+     ```
+     public class HelloControllPatchGenerator implements PatchGenerator {
+         public AgentBuilder createPatchBuilder() {
+             AgentBuilder agentBuilder = new AgentBuilder.Default()
+                     // by default, JVM classes are not instrumented
+                     .ignore(ElementMatchers.none())
+                     .disableClassFormatChanges()
+                     .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+                      //安装补丁的错误信息打印到控制台
+                     .with(AgentBuilder.Listener.StreamWriting.toSystemOut().withErrorsOnly())
+                      //给org.xbo.hotfix.demo.web.HelloControll打补丁
+                     .type(ElementMatchers.nameStartsWith("org.xbo.hotfix.demo.web.HelloControll"))
+                     .transform((builder, type, loader, module) -> builder
+                            .visit(Advice
+                                     //补丁实现类
+                                     .to(HelloControllPatchGenerator.class)
+                                     //哪个方法要打补丁
+                                     .on(ElementMatchers.named("hello"))
+                             )
+                     );
+             return agentBuilder;
+         }
+     
+         /*
+          * @This 调用对象
+          * @Argument 方法参数(只能选择一个)
+          * @Arguments 方法所有参数
+          * @Origin 原始调用方法
+          * @SuperCall 回调方法
+          * */
+         @Advice.OnMethodEnter//inline默认true,即把方法体内容复制到原方法里面
+         private static void onHelloEnter(@Advice.This Object self, @Advice.Origin Method method,
+                                       @Advice.Argument(value = 0,readOnly = false) String name){
+             System.out.println("begin call hello");
+             //修改参数
+             name="hello,"+name;
+             System.out.println("new name :" + name);
+             LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+             //原abc日志级别重置DEBUG级别
+             loggerContext.getLogger("abc").setLevel(Level.DEBUG);
+         }
+     }
+     ```
 
-   3. 编译补丁并打包jar
+   - 编译补丁并打包jar
 
 2. 应用补丁
 
@@ -66,7 +72,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
    - 执行命令：
 
      ```
-     java -jar agent/target/hotfix-agent-0.3-SNAPSHOT.jar -patch "example/target/patch-example-1.0-SNAPSHOT.jar" -pid 10196
+     java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196
      ```
 
 3. 查看应用的补丁
@@ -74,7 +80,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
    - 执行命令：
 
      ```
-     java -jar agent/target/hotfix-agent-0.3-SNAPSHOT.jar -patch "example/target/patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd list
+     java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd list
      ```
 
    - 观察目标进程运行日志，可以看到如下内容：
@@ -82,20 +88,20 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
      ```
      ****************************************PATCH LIST****************************************
        load time  				url
-       2020-01-13 22:23:21  		jar:file:/hotfix/example/target/patch-example-1.0-SNAPSHOT.jar!/
+       2020-01-13 22:23:21  		jar:file:/hotfix/example/patch-example-1.0-SNAPSHOT.jar!/
      ****************************************PATCH LIST****************************************
      ```
 
 4. 卸载补丁，执行命令：
 
    ```
-   java -jar agent/target/hotfix-agent-0.3-SNAPSHOT.jar -patch "example/target/patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd uninstall
+   java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd uninstall
    ```
 
 5. 卸载所有补丁，执行命令：
 
    ```
-   java -jar agent/target/hotfix-agent-0.3-SNAPSHOT.jar -patch "example/target/patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd clean
+   java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd clean
    ```
 
 # 依赖
