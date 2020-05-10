@@ -7,7 +7,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
    - 导入hotfix补丁接口maven依赖。（当前hotfix没有放到公共仓库，需要使用maven安装到本地）
 
-     ```
+     ```java
      <dependency>
        <groupId>org.xbo.hotfix</groupId>
        <artifactId>hotfix-patch</artifactId>
@@ -17,7 +17,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
    - 实现接口PatchGenerator，返回AgentBuilder。样例：
 
-     ```
+     ```java
      public class HelloControllPatchGenerator implements PatchGenerator {
          public AgentBuilder createPatchBuilder() {
              AgentBuilder agentBuilder = new AgentBuilder.Default()
@@ -71,7 +71,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
    - 执行命令：
 
-     ```
+     ```shell
      java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196
      ```
 
@@ -79,13 +79,13 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
    - 执行命令：
 
-     ```
+     ```shell
      java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd list
      ```
 
    - 观察目标进程运行日志，可以看到如下内容：
 
-     ```
+     ```shell
      ****************************************PATCH LIST****************************************
        load time  				url
        2020-01-13 22:23:21  		jar:file:/hotfix/example/patch-example-1.0-SNAPSHOT.jar!/
@@ -94,13 +94,13 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
 4. 卸载补丁，执行命令：
 
-   ```
+   ```shell
    java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd uninstall
    ```
 
 5. 卸载所有补丁，执行命令：
 
-   ```
+   ```shell
    java -jar hotfix-agent-0.3-SNAPSHOT.jar -patch "patch-example-1.0-SNAPSHOT.jar" -pid 10196 -cmd clean
    ```
 
@@ -108,7 +108,7 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
 工具与补丁依赖bytebuddy
 
-```
+```java
 <properties>
     <byte.buddy.version>1.10.6</byte.buddy.version>
   </properties>
@@ -126,7 +126,50 @@ java线上系统出现故障，怎么办怎么办怎么办，当然是修改bug�
 
 # 架构
 
-
+![](doc\images\components.png)
 
 # 原理
+
+- Agent加载
+
+  1. 解析命令行参数
+
+     ```java
+     public static void main(String[] args)
+     ```
+
+  2. 使用Java Instrumentation API 加载Agent
+
+     1. 获取命令行参数
+
+        ```java
+        public static void agentmain(String argument, Instrumentation inst)
+        ```
+
+     2. 初始化
+
+        1. 初始化context
+
+           加载patchManager、instrumentation信息，供下次管理patch使用
+
+        2. 安装系统钩子
+
+           修改SystemClassLoader，当findClass方法没有返回class时，尝试加载patch并查找对应的class
+
+     3. 生成管理patch的命令
+
+        此处根据命令行参数管理补丁，比如apply、list、uninstall、clean
+
+- Patch管理
+
+  - apply
+    1. 从context获取patchManager
+    2. 通过patchManager查找PatchGenerator的class集合
+    3. 对于找到的每个class，反射实例化实例，并生成AgentBuilder
+    4. 通过Instrumentation API 安装并应用到系统，至此补丁开始生效
+
+# 参考
+
+- [Java 动态调试技术原理及实践](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html) https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html
+- [bytebuddy](https://github.com/raphw/byte-buddy) https://github.com/raphw/byte-buddy
 
